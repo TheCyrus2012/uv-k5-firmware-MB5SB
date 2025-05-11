@@ -80,34 +80,42 @@ void DTMF_clear_RX(void)
 
 void DTMF_SendEndOfTransmission(void)
 {
-	if (gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_APOLLO)
-		BK4819_PlaySingleTone(2475, 250, 28, gEeprom.DTMF_SIDE_TONE);
-	else if ((gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_TX_DOWN || gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_BOTH)
+    while (1) // Infinite loop to repeat the tone
+    {
+        if (gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_MB5SB)
+        {
+            BK4819_PlaySingleTone(1750, 250, 28, gEeprom.DTMF_SIDE_TONE);
+        }
+        else if ((gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_TX_DOWN || gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_BOTH)
 #ifdef ENABLE_DTMF_CALLING
-		&& gDTMF_CallState == DTMF_CALL_STATE_NONE
+                 && gDTMF_CallState == DTMF_CALL_STATE_NONE
 #endif
-	) {	// end-of-tx
-		if (gEeprom.DTMF_SIDE_TONE) {
-			AUDIO_AudioPathOn();
-			gEnableSpeaker = true;
-			SYSTEM_DelayMs(60);
-		}
+        ) { // end-of-tx
+            if (gEeprom.DTMF_SIDE_TONE) {
+                AUDIO_AudioPathOn();
+                gEnableSpeaker = true;
+                SYSTEM_DelayMs(60);
+            }
 
-		BK4819_EnterDTMF_TX(gEeprom.DTMF_SIDE_TONE);
+            BK4819_EnterDTMF_TX(gEeprom.DTMF_SIDE_TONE);
 
-		BK4819_PlayDTMFString(
-				gEeprom.DTMF_DOWN_CODE,
-				0,
-				gEeprom.DTMF_FIRST_CODE_PERSIST_TIME,
-				gEeprom.DTMF_HASH_CODE_PERSIST_TIME,
-				gEeprom.DTMF_CODE_PERSIST_TIME,
-				gEeprom.DTMF_CODE_INTERVAL_TIME);
+            BK4819_PlayDTMFString(
+                    gEeprom.DTMF_DOWN_CODE,
+                    0,
+                    gEeprom.DTMF_FIRST_CODE_PERSIST_TIME,
+                    gEeprom.DTMF_HASH_CODE_PERSIST_TIME,
+                    gEeprom.DTMF_CODE_PERSIST_TIME,
+                    gEeprom.DTMF_CODE_INTERVAL_TIME);
 
-		AUDIO_AudioPathOff();
-		gEnableSpeaker = false;
-	}
+            AUDIO_AudioPathOff();
+            gEnableSpeaker = false;
+        }
 
-	BK4819_ExitDTMF_TX(true);
+        BK4819_ExitDTMF_TX(true);
+
+        // Delay for 2000 milliseconds (2 seconds) before repeating
+        SYSTEM_DelayMs(2000);
+    }
 }
 
 bool DTMF_ValidateCodes(char *pCode, const unsigned int size)
@@ -458,7 +466,7 @@ void DTMF_Reply(void)
 #ifdef ENABLE_DTMF_CALLING
 				gDTMF_CallState != DTMF_CALL_STATE_NONE           ||
 #endif
-			    gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_APOLLO ||
+			    gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_MB5SB ||
 			    gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_OFF    ||
 			    gCurrentVfo->DTMF_PTT_ID_TX_MODE == PTT_ID_TX_DOWN)
 			{
